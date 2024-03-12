@@ -1,0 +1,90 @@
+{%extends 'base.html'%}
+{% block title %}Extract text from Image{% endblock title%}
+{% block content %} 
+    <div class="container mx-auto p-4">
+        <h1 class="text-center">Extract text from Image</h1>
+        <div class="flex justify-center items-center w-full">
+            <form id="uploadForm" class="bg-white rounded-lg shadow-lg p-10 flex flex-col" enctype="multipart/form-data">
+                <label class="w-full flex flex-col items-center px-4 py-6 bg-white text-blue rounded-lg shadow-lg tracking-wide uppercase border border-blue cursor-pointer hover:bg-blue-500 hover:text-white">
+                    <svg class="w-8 h-8" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M16.88 9.1L10.61.79a.5.5 0 00-.84-.01L3.37 9.1A.5.5 0 003.8 10h2.2V18a.5.5 0 00.5.5h6a.5.5 0 00.5-.5V10h2.2a.5.5 0 00.43-.76.5.5 0 00-.03-.14zM11 17v-4h-2v4H8V9.7l2-2.45 2 2.44V17h-1z"/></svg>
+                    <span class="mt-2 text-base leading-normal">Select a file or drag here</span>
+                    <input type='file' name="file" class="hidden" required />
+                </label>
+                <button class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" type="submit">
+                    Scan
+                </button>
+            </form>
+        </div>
+        <!-- Loading Icon Placeholder -->
+        <div id="loading" class="hidden flex justify-center items-center mt-4">
+            <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <div id="result" class="mt-4"></div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            $('#uploadForm').on('submit', function(e) {
+                e.preventDefault();
+                $('#loading').removeClass('hidden'); // Show the loading icon
+                $.ajax({
+                    url: '/scan',
+                    type: 'POST',
+                    data: new FormData(this),
+                    contentType: false,
+                    processData: false,
+                    xhrFields: {
+                        responseType: 'blob' // to handle binary data
+                    },
+                    success: function(data) {
+                        // Create a Blob from the PDF Stream
+                        const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                        // Create an anchor element and dispatch a click event on it
+                        // to trigger download
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = 'extracted_text.docx'; // name of the file to download
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("Error: " + error);
+                    },
+                    complete: function() {
+                        $('#loading').addClass('hidden'); // Hide the loading icon
+                    }
+                });
+            });
+        });
+    
+        function dropHandler(ev) {
+            console.log('File(s) dropped');
+            ev.preventDefault();
+    
+            if (ev.dataTransfer.items) {
+                for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+                    if (ev.dataTransfer.items[i].kind === 'file') {
+                        var file = ev.dataTransfer.items[i].getAsFile();
+                        console.log('... file[' + i + '].name = ' + file.name);
+                        $('#uploadForm input[type="file"]').prop('files', ev.dataTransfer.files);
+                        $('#uploadForm').submit();
+                    }
+                }
+            } 
+        }
+    
+        function dragOverHandler(ev) {
+            console.log('File(s) in drop zone');
+            ev.preventDefault();
+        }
+    
+        let form = document.getElementById('uploadForm');
+        form.addEventListener('dragover', dragOverHandler);
+        form.addEventListener('drop', dropHandler);
+    </script>
+    
+{% endblock content %}

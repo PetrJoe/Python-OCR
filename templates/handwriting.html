@@ -1,0 +1,43 @@
+{%extends 'base.html'%}
+{% block title %}Handwritten Recognition{% endblock title%}
+{% block content %} 
+    <div class="container max-w-md mx-auto text-center mt-10">
+        <form id="uploadForm" class="bg-white p-6 rounded shadow-md" enctype="multipart/form-data">
+            <h2 class="text-2xl font-bold mb-4">Upload Image with Handwritten Text</h2>
+            <input class="block w-full text-sm p-2 border rounded mb-4" type="file" name="file" id="file" required>
+            <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-700">Upload Image</button>
+        </form>
+        <div id="loading" class="hidden">
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0116 0H4z"></path>
+            </svg>
+            Processing...
+        </div>
+        <div id="results" class="mt-4"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#uploadForm').submit(function(e) {
+                e.preventDefault();
+                $('#loading').removeClass('hidden');
+                var formData = new FormData(this);
+                $.ajax({
+                    url: '/handwriting',
+                    type: 'POST',
+                    data: formData,
+                    success: function(data) {
+                        $('#results').html(`<div class="bg-green-100 p-4 rounded"><strong>Recognized Text:</strong><p>${data.text.join(' ')}</p></div>`);
+                    },
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    complete: function() {
+                        $('#loading').addClass('hidden'); 
+                    }
+                });
+            });
+        });
+    </script>    
+{% endblock content %}

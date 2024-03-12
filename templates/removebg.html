@@ -1,0 +1,40 @@
+{%extends 'base.html'%}
+{% block title %}Background Remover{% endblock title%}
+{% block content %} 
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="container mx-auto text-center">
+        <h1 class="text-2xl font-bold mb-8">Background Remover</h1>
+        <input type="file" id="imageInput" accept="image/*" class="mb-4">
+        <button id="uploadButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Remove Background
+        </button>
+        <div id="result" class="mt-8">
+            <img id="resultImage" class="max-w-md mx-auto" style="display: none;"/>
+        </div>
+    </div>
+    
+    <script>
+        $(document).ready(function() {
+            $('#uploadButton').click(function() {
+                var formData = new FormData();
+                formData.append('image', $('#imageInput')[0].files[0]);
+                
+                $.ajax({
+                    url: '/remove-bg',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(data) {
+                        var url = URL.createObjectURL(data);
+                        $('#resultImage').attr('src', url).show();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error: " + status + " " + error);
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock content %}
